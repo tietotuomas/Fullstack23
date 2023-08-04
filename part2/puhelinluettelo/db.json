@@ -2,7 +2,7 @@
   "persons": [
     {
       "name": "Arto Hellas",
-      "number": "040-123456",
+      "number": " 040-1234567",
       "id": 1
     },
     {
@@ -24,26 +24,6 @@
       "name": "Elon Musk",
       "number": "420-69",
       "id": 5
-    },
-    {
-      "name": "testi",
-      "number": "testi1",
-      "id": 6
-    },
-    {
-      "name": "a",
-      "number": "123",
-      "id": 7
-    },
-    {
-      "name": "b",
-      "number": "123",
-      "id": 8
-    },
-    {
-      "name": "c",
-      "number": "123",
-      "id": 9
     }
   ]
 }
