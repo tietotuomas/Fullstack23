@@ -3,12 +3,15 @@ import personService from './services/PersonService'
 import Filter from './components/Filter'
 import AddNew from './components/AddNew'
 import Persons from './components/Persons'
+import Message from './components/Message'
 
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
+  const [message, setMessage] = useState('')
+  const [timeoutId, setTimeoutId] = useState(null)
 
   useEffect(() => {
     console.log('useEffect')
@@ -33,6 +36,17 @@ const App = () => {
     setFilter(event.target.value)
   }
 
+  const setNewMessage = (msg) => {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+    }
+    setMessage(msg)
+    const newTimeoutId = setTimeout(() => {
+      setMessage('')
+    }, 5000)
+    setTimeoutId(newTimeoutId)
+  }
+
   const handleDeleteClick = (id) => {
     const personToBeRemoved = persons.find((p) => p.id === id)
     const confirmed = window.confirm(`Delete ${personToBeRemoved.name}?`)
@@ -41,9 +55,16 @@ const App = () => {
         .remove(id)
         .then(() => {
           setPersons(persons.filter((p) => p.id !== id))
+          setNewMessage(`${personToBeRemoved.name} removed successfully`)
         })
         .catch((error) => {
           console.log(error)
+          if (error.message === 'Request failed with status code 404') {
+            setNewMessage(
+              `Information of ${personToBeRemoved.name} has already been removed from the server`
+            )
+            setPersons(persons.filter((p) => p.id !== personToBeRemoved.id))
+          }
         })
     }
   }
@@ -60,6 +81,10 @@ const App = () => {
           .update(duplicate.id, { name: newName, number: newNumber })
           .then((updatedPerson) => {
             console.log(updatedPerson)
+            setNewMessage(
+              `Information of ${duplicate.name} updated successfully`
+            )
+
             setPersons(
               persons.map((p) => (p.id !== duplicate.id ? p : updatedPerson))
             )
@@ -68,6 +93,12 @@ const App = () => {
           })
           .catch((error) => {
             console.log(error)
+            if (error.message === 'Request failed with status code 404') {
+              setNewMessage(
+                `Information of ${duplicate.name} has already been removed from the server`
+              )
+              setPersons(persons.filter((p) => p.id !== duplicate.id))
+            }
           })
       }
     } else {
@@ -79,6 +110,8 @@ const App = () => {
         .then((createdPerson) => {
           console.log({ createdPerson })
           setPersons(persons.concat(createdPerson))
+
+          setNewMessage(`${newName} added successfully`)
         })
         .catch((error) => {
           console.log(error)
@@ -92,6 +125,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Message message={message} />
       <Filter filter={filter} handleFilterChange={handleFilterChange} />
 
       <h3>Add a new</h3>
