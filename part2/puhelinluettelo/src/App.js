@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import personService from './services/PersonService'
 import Filter from './components/Filter'
 import AddNew from './components/AddNew'
 import Persons from './components/Persons'
@@ -12,10 +12,13 @@ const App = () => {
 
   useEffect(() => {
     console.log('useEffect')
-    axios.get('http://localhost:3001/persons').then((response) => {
-      console.log(response.data)
-      setPersons(response.data)
-    })
+    personService
+      .getAll()
+      .then((initialPersons) => {
+        console.log(initialPersons)
+        setPersons(initialPersons)
+      })
+      .catch((error) => console.log(error))
   }, [])
 
   const handleNameChange = (event) => {
@@ -36,7 +39,19 @@ const App = () => {
     if (duplicate) {
       alert(`${duplicate.name} is already added to phonebook`)
     } else {
-      setPersons(persons.concat({ name: newName, number: newNumber }))
+      personService
+        .create({
+          name: newName,
+          number: newNumber,
+        })
+        .then((createdPerson) => {
+          console.log({ createdPerson })
+          setPersons(persons.concat(createdPerson))
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+
       setNewName('')
       setNewNumber('')
     }
