@@ -1,14 +1,9 @@
+require('dotenv').config()
+const Person = require('./models/person')
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 const app = express()
-
-let persons = [
-  { name: 'Arto Hellas', number: '040-123456', id: 1 },
-  { name: 'Ada Lovelace', number: '39-44-5323523', id: 2 },
-  { name: 'Dan Abramov', number: '12-43-234345', id: 3 },
-  { name: 'Mary Poppendieck', number: '39-23-6423122', id: 4 },
-]
 
 app.use(cors())
 app.use(express.static('build'))
@@ -23,24 +18,24 @@ app.use(
   morgan(':method :url :status :res[content-length] - :response-time ms :body')
 )
 
-app.get('/info', (req, res) => {
+app.get('/info', async (req, res) => {
   const date = new Date()
+  const persons = await Person.find({})
+
 
   res.send(
     `<p>Phonebook has info for ${persons.length} people.</p><p>${date}</p>`
   )
 })
 
-app.get('/api/persons', (req, res) => {
+app.get('/api/persons', async (req, res) => {
+  const persons = await Person.find({})
   res.json(persons)
 })
 
-app.get('/api/persons/:id', (req, res) => {
-  const person = persons.find((p) => p.id === Number(req.params.id))
-  if (person) {
-    return res.json(person)
-  }
-  res.status(404).end()
+app.get('/api/persons/:id', async (req, res) => {
+  const person = await Person.findById(req.params.id)
+  return res.json(person)
 })
 
 app.delete('/api/persons/:id', (req, res) => {
@@ -50,20 +45,23 @@ app.delete('/api/persons/:id', (req, res) => {
 })
 
 app.post('/api/persons/', (req, res) => {
-  const person = req.body
-  if (!person.name) {
-    return res.status(400).json({ error: 'Name missing' })
+
+  if (req.body.name === undefined) {
+    return res.status(400).json({error: 'Name is required'})
   }
-  if (!person.number) {
-    return res.status(400).json({ error: 'Number required' })
+
+  if (req.body.number === undefined) {
+    return res.status(400).json({error: 'Number is required'})
   }
-  const duplicate = persons.find((p) => p.name === person.name)
-  if (duplicate) {
-    return res.status(400).json({ error: 'Name must be unique' })
-  }
-  person.id = Math.floor(Math.random() * 1000) + 5
-  persons = persons.concat(person)
-  res.status(201).json(person)
+
+  const person = new Person({
+    name: req.body.name,
+    number: req.body.number
+  })
+
+  person.save().then(savedPerson => {
+    res.json(savedPerson)
+  })
 })
 
 const PORT = process.env.PORT || 3001
