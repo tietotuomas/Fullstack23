@@ -1,4 +1,5 @@
 const Persons = ({ persons, filter, handleDeleteClick }) => {
+  console.log({persons});
   const personsToShow = () => {
     return persons.filter((p) =>
       p.name.toLowerCase().includes(filter.toLowerCase())

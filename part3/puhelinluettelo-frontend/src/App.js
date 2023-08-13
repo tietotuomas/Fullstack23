@@ -10,7 +10,7 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState({ message: '', error: false })
   const [timeoutId, setTimeoutId] = useState(null)
 
   useEffect(() => {
@@ -36,13 +36,13 @@ const App = () => {
     setFilter(event.target.value)
   }
 
-  const setNewMessage = (msg) => {
+  const setNewMessage = (msg, isError) => {
     if (timeoutId) {
       clearTimeout(timeoutId)
     }
-    setMessage(msg)
+    setMessage({ message: msg, error: isError })
     const newTimeoutId = setTimeout(() => {
-      setMessage('')
+      setMessage({ message: '', error: false })
     }, 5000)
     setTimeoutId(newTimeoutId)
   }
@@ -55,13 +55,14 @@ const App = () => {
         .remove(id)
         .then(() => {
           setPersons(persons.filter((p) => p.id !== id))
-          setNewMessage(`${personToBeRemoved.name} removed successfully`)
+          setNewMessage(`${personToBeRemoved.name} removed successfully`, false)
         })
         .catch((error) => {
           console.log(error)
           if (error.message === 'Request failed with status code 404') {
             setNewMessage(
-              `Information of ${personToBeRemoved.name} has already been removed from the server`
+              `Information of ${personToBeRemoved.name} has already been removed from the server`,
+              true
             )
             setPersons(persons.filter((p) => p.id !== personToBeRemoved.id))
           }
@@ -80,9 +81,15 @@ const App = () => {
         personService
           .update(duplicate.id, { name: newName, number: newNumber })
           .then((updatedPerson) => {
-            console.log(updatedPerson)
+            console.log({ updatedPerson })
+            if (!updatedPerson) {
+              throw new Error(
+                `Information of ${duplicate.name} has already been removed from the server`
+              )
+            }
             setNewMessage(
-              `Information of ${duplicate.name} updated successfully`
+              `Information of ${duplicate.name} updated successfully`,
+              false
             )
 
             setPersons(
@@ -93,11 +100,18 @@ const App = () => {
           })
           .catch((error) => {
             console.log(error)
-            if (error.message === 'Request failed with status code 404') {
-              setNewMessage(
+            if (
+              error.message === 'Request failed with status code 404' ||
+              error.message ===
                 `Information of ${duplicate.name} has already been removed from the server`
+            ) {
+              setNewMessage(
+                `Information of ${duplicate.name} has already been removed from the server`,
+                true
               )
               setPersons(persons.filter((p) => p.id !== duplicate.id))
+            } else if (error.response.data.error) {
+              setNewMessage(error.response.data.error, true)
             }
           })
       }
@@ -111,14 +125,16 @@ const App = () => {
           console.log({ createdPerson })
           setPersons(persons.concat(createdPerson))
 
-          setNewMessage(`${newName} added successfully`)
+          setNewMessage(`${newName} added successfully`, false)
+          setNewName('')
+          setNewNumber('')
         })
         .catch((error) => {
           console.log(error)
+          if (error.response.data.error) {
+            setNewMessage(error.response.data.error, true)
+          }
         })
-
-      setNewName('')
-      setNewNumber('')
     }
   }
 

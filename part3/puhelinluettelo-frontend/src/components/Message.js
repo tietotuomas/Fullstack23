@@ -1,9 +1,9 @@
 const Message = ({ message }) => {
-  if (message) {
-    if (message.includes('has already been removed from the server')) {
-      return <div className="error">{message}</div>
+  if (message.message) {
+    if (message.error) {
+      return <div className="error">{message.message}</div>
     }
-    return <div className="message">{message}</div>
+    return <div className="message">{message.message}</div>
   }
 }
 
