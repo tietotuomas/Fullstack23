@@ -14,10 +14,10 @@ if (process.argv.length === 3 || process.argv.length === 5) {
     number: String,
   })
 
-  const Person = mongoose.model("Person", personSchema)
+  const Person = mongoose.model('Person', personSchema)
 
   if (process.argv.length === 3) {
-    console.log('fetching');
+    console.log('fetching')
     Person.find({}).then((result) => {
       result.forEach((p) => {
         console.log(p)
@@ -27,7 +27,7 @@ if (process.argv.length === 3 || process.argv.length === 5) {
   }
 
   if (process.argv.length === 5) {
-    console.log('create a new');
+    console.log('create a new')
     const person = new Person({
       name: process.argv[3],
       number: process.argv[4],
